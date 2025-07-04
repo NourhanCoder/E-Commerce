@@ -29,7 +29,7 @@ class CartController extends Controller
                     'id' => $productId,
                     'title' => $product->title,
                     'price' => $product->discounted_price ?? $product->price,
-                    'image' => $product->image(), // تأكدي إن دي بترجع string
+                    'image' => $product->image(), 
                     'quantity' => 1,
                 ];
             }

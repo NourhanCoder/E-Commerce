@@ -117,6 +117,7 @@ Route::prefix('admin')->middleware(['auth', 'can:admin-control'])->name('admin.'
     Route::resource('discounts', DiscountController::class);
 });
 
+//Manage Orders
 Route::middleware(['auth', 'can:admin-control'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');

@@ -45,7 +45,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'type' => 'required|in:admin,customer', // حسب الأنواع اللي عندك
+            'type' => 'required|in:admin,customer', 
             'password' => 'required|string|min:8|confirmed',
             'image' => 'nullable',
             'image',
