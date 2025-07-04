@@ -15,17 +15,23 @@ class HomeController extends Controller
      */
     public function index()
     {
-        //لعرض كل المنتجات 
-        $products = Product::with('discount')->latest()->take(10)->get(); 
+        //لعرض 10 منتجات مع الخصومات ان وجدت
+        $products = Product::with(['discount' => function ($q) {
+        $q->where('start_date', '<=', now())
+        ->where('end_date', '>=', now());
+       }])->take(10)->get();
 
-        //لعرض احدث المنتجات
-         $latestProducts = Product::latest()->take(10)->get();
+        // لعرض احدث المنتجات مع الخصومات ان وجدت
+         $latestProducts = Product::with(['discount' => function ($q) {
+        $q->where('start_date', '<=', now())
+        ->where('end_date', '>=', now());
+        }])->latest()->take(10)->get();
     
         // جلب التصنيفات الرئيسية ومعاها التصنيفات الفرعية
-        $categories = Category::with('children')->whereNull('parent_id')->get();
+        // $categories = Category::with('children')->whereNull('parent_id')->get();
 
-        // جلب آخر 12 منتج
-        $products = Product::with('category')->latest()->take(12)->get();
+        // لو حبيت اعرض الكتاب بينتمي ل انهي تصنيف
+        // $products = Product::with('category')->latest()->take(10)->get();
 
         // احدث 4 كتب للسلايدر
         $sliderBooks = Product::orderBy('id', 'desc')->take(4)->get();
@@ -37,8 +43,11 @@ class HomeController extends Controller
         ->orderBy('end_date', 'asc')
         ->get(); 
        
+        //لعرض الكتب الاكثر مبيعا
+        $bestSellingProducts = Product::withCount('orderItems')
+        ->orderByDesc('order_items_count')->take(10)->get();
 
-       return view('website.home', compact('categories', 'products', 'sliderBooks', 'discounts', 'latestProducts'));
+       return view('website.home', compact( 'products', 'sliderBooks', 'discounts', 'latestProducts', 'bestSellingProducts'));
     }
 
     public function productsByCategory(Category $category)
@@ -65,12 +74,8 @@ class HomeController extends Controller
     public function show(Product $product)
     {
         // جلب الخصم الحالي للمنتج (إن وجد)
-        $activeDiscount = $product->discount()
-        ->where('start_date', '<=', now())
-        ->where('end_date', '>=', now())
-        ->first();
-
-     return view('website.products.show', compact('product', 'activeDiscount'));
+        //تم استخدام دالة اكسيسور من داخل الموديل لتحسين الاداء
+     return view('website.products.show', compact('product'));
     }
 
 }

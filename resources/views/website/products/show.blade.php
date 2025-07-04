@@ -20,10 +20,10 @@
             @else
              fa-regular @endauth"></i>
                 </div>
-                @if ($activeDiscount)
+                @if ($product->active_discount)
                     <!-- شارة الخصم -->
                     <div class="badge bg-danger position-absolute top-0 start-0 m-2 px-2 py-1 fs-6">
-                        خصم {{ $activeDiscount->percentage }}%
+                        خصم {{ $product->active_discount->percentage }}%
                     </div>
                 @endif
 
@@ -50,7 +50,7 @@
                 </div>
 
                 <!-- السعر -->
-                @if ($activeDiscount)
+                @if ($product->active_discount)
                     <h4 class="fw-bold mb-3">
                         <span class="text-danger">{{ $product->discounted_price }} جنيه</span>
                         <del class="text-muted ms-2">{{ $product->price }} جنيه</del>

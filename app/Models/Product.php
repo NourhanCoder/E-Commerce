@@ -51,10 +51,23 @@ class Product extends Model
 //لتفادي تكرار كود الخصم في الصفحات او الكنترولر
 public function getDiscountedPriceAttribute()
 {
-    $discount = $this->discount()
+    $discount = null;
+
+    // لو الخصم محمّل بالفعل
+    if ($this->relationLoaded('discount') && $this->discount) {
+        if (
+            $this->discount->start_date <= now() &&
+            $this->discount->end_date >= now()
+        ) {
+            $discount = $this->discount;
+        }
+    } else {
+        // خصم من استعلام يدوي
+       $discount = $this->discount()
         ->where('start_date', '<=', now())
         ->where('end_date', '>=', now())
         ->first();
+      }
 
     if ($discount) {
         return round($this->price * (1 - $discount->percentage / 100), 2);
@@ -66,6 +79,16 @@ public function getDiscountedPriceAttribute()
 //لمعرفة الخصم الحالي ونسبته
 public function getActiveDiscountAttribute()
 {
+    // لو الخصم متحمّل بالفعل من with()
+    //لتحسين اداء الموقع
+    if ($this->relationLoaded('discount') && $this->discount) {
+        if (
+            $this->discount->start_date <= now() &&
+            $this->discount->end_date >= now()
+        ) {
+            return $this->discount;
+        }
+    }
     return $this->discount()
         ->where('start_date', '<=', Carbon::now()) //كلاس كاربون سهل الاستخدام لاداراة التواريخ والوقت
         ->where('end_date', '>=', Carbon::now())
