@@ -20,6 +20,15 @@
         </div>
       </section>
 
+      @if ($errors->any())
+    <div class="alert alert-danger mt-3">
+        @foreach ($errors->all() as $error)
+            <div>{{ $error }}</div>
+        @endforeach
+    </div>
+@endif
+
+
       <section class="section-container my-5 py-5 d-lg-flex">
         <div class="checkout__form-cont w-50 px-3 mb-5">
           <h4>الفاتورة </h4>
@@ -98,6 +107,8 @@
 
   <button class="primary-button w-100 py-2">تأكيد الطلب</button>
 </form>
+
+
 
         </div>
         <div class="checkout__order-details-cont w-50 px-3">

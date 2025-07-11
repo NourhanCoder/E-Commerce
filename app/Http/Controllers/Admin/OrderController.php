@@ -23,10 +23,31 @@ class OrderController extends Controller
     {
         $request->validate([
         'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
-        ]);
+    ]);
 
-        $order->update(['status' => $request->status]);
+    $oldStatus = $order->status;
+    $newStatus = $request->status;
 
-       return  redirect()->route('admin.orders.index')->with('success', 'Status Updated Successfully');
+    // لو اتحول من pending/cancelled إلى cancelled → نرجع الكمية
+    if (in_array($oldStatus, ['pending', 'processing', 'shipped']) && $newStatus == 'cancelled') {
+        foreach ($order->orderItems as $item) {
+            $item->product->increment('stock', $item->quantity);
+        }
+    }
+
+    // لو اتحول من cancelled إلى حالة تانية → نخصم الكمية تاني
+    if ($oldStatus == 'cancelled' && in_array($newStatus, ['pending', 'processing', 'shipped'])) {
+        foreach ($order->orderItems as $item) {
+            // تأكد إن الكمية متوفرة
+            if ($item->product->stock < $item->quantity) {
+                return redirect()->back()->withErrors(['error' => "الكمية غير متوفرة للمنتج: {$item->product->title}"]);
+            }
+            $item->product->decrement('stock', $item->quantity);
+        }
+    }
+
+    $order->update(['status' => $newStatus]);
+
+    return redirect()->route('admin.orders.index')->with('success', 'تم تحديث حالة الطلب بنجاح.');
     }
 }

@@ -254,11 +254,19 @@
                     if (data.success) {
                         document.querySelector(`.product-quantity[data-product-id="${productId}"]`).innerText = data.newQuantity;
                         document.querySelector('.cart-total-amount').innerText = data.total + ' جنيه';
+                    } else {
+                        // هنا بنعرض رسالة للمستخدم
+                        alert(data.message || 'الكمية المطلوبة غير متاحة في المخزون.');
                     }
+                })
+                .catch(error => {
+                    console.error('خطأ في الاتصال:', error);
+                    alert('حدث خطأ أثناء تحديث الكمية. حاول مرة أخرى.');
                 });
             });
         });
     });
 </script>
+
 
 

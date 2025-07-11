@@ -22,7 +22,7 @@ class HomeController extends Controller
        }])->take(10)->get();
 
         // لعرض احدث المنتجات مع الخصومات ان وجدت
-         $latestProducts = Product::with(['discount' => function ($q) {
+        $latestProducts = Product::with(['discount' => function ($q) {
         $q->where('start_date', '<=', now())
         ->where('end_date', '>=', now());
         }])->latest()->take(10)->get();

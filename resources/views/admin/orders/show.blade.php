@@ -18,7 +18,7 @@
         <div class="card p-4 mb-4">
             <h4>Shipping Address</h4>
             <p><strong>City :</strong> {{ $order->address->city }}</p>
-            <p><strong>streat :</strong> {{ $order->address->street }}</p>
+            <p><strong>street :</strong> {{ $order->address->street }}</p>
             <p><strong>Phone Number :</strong> {{ $order->address->phone }}</p>
             <p><strong>Note :</strong> {{ $order->address->note ?? 'لا يوجد' }}</p>
         </div>

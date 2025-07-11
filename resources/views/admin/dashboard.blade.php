@@ -6,7 +6,39 @@
 
 <div class="right_col" role="main">
   <div class="container">
-    <h2>Users List</h2>
+    @if($lowStockProducts->count() > 0)
+  <div class="card border-warning mb-4 shadow-sm">
+    <div class="card-header bg-warning d-flex align-items-center">
+      <i class="fa-solid fa-triangle-exclamation text-danger me-2 fs-5"></i>
+      <strong class="text-dark">
+        ⚠️ Attention: Low Stock Products
+      </strong>
+    </div>
+    <div class="card-body bg-light">
+      <p class="mb-2">The following products have low stock levels. Please take action:</p>
+      <ul class="list-group list-group-flush">
+        @foreach($lowStockProducts as $product)
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>{{ $product->title }}</strong>
+              — only <span class="text-danger fw-bold">{{ $product->stock }}</span> left in stock.
+            </div>
+            <div>
+              <a href="{{ route('admin.products.show', $product->id) }}" class="btn btn-sm btn-info me-2">
+                View
+              </a>
+              <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-sm btn-warning">
+                Edit Stock
+              </a>
+            </div>
+          </li>
+        @endforeach
+      </ul>
+    </div>
+  </div>
+@endif
+
+    <h2>Users List</h2> 
 
     @if (session('success'))
   <div class="alert alert-success mt-3">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 
 use App\Models\User;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -16,8 +17,11 @@ class UserController extends Controller
      */
     public function index()
     {
+        // المنتجات اللي الكمية فيها أقل من أو تساوي 5
+        $lowStockProducts = Product::where('stock', '<=', 5)->get();
+        
         $users = User::orderBy('id', 'DESC')->paginate(5);
-        return view('admin.dashboard', compact('users'));
+        return view('admin.dashboard', compact('users', 'lowStockProducts'));
     }
 
     public function toggle(User $user)

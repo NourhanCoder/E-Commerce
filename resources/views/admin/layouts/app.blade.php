@@ -35,6 +35,7 @@
         <!-- top navigation -->
          @include('admin.layouts.nav')
         <!-- /top navigation -->
+        
 
         <!-- page content -->
         @yield('admin-content')

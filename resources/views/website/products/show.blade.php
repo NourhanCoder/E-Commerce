@@ -3,7 +3,7 @@
 @section('title', $product->title)
 
 @section('content')
-    <div class="container pt-5 mt-5 mb-5">
+  <div class="container" style="margin-top: 130px;">
         <div class="row align-items-center">
             <!-- صورة المنتج -->
             <div class="col-md-4 text-center mt-4 mb-md-0 position-relative">
@@ -58,10 +58,63 @@
                 @else
                     <h4 class="fw-bold mb-3">{{ $product->price }} جنيه</h4>
                 @endif
-                <form method="POST" action="{{ route('cart.add', $product->id) }}">
-                  @csrf
-                 <button type="submit" class="btn btn-success">أضف إلى السلة</button>
-               </form>
+
+                <p>
+
+
+
+                <!-- حالة التوفر -->
+        <div class="mb-3">
+             <strong>الحالة:</strong>
+             
+            @if ($product->stock > 0)
+                <span class="badge bg-primary">متوفر</span>
+           @else
+              <span class="badge bg-danger">غير متوفر</span>
+           @endif
+
+           @if ($product->stock <= 5 && $product->stock > 0)
+             <p class="text-danger fw-bold mt-2">تبقّى {{ $product->stock }} فقط في المخزون!</p>
+          @endif
+
+        </div>
+               @if ($product->stock > 0)
+    <form method="POST" action="{{ route('cart.add', $product->id) }}">
+        @csrf
+
+        <div class="mb-3 d-flex align-items-center gap-2">
+            <label class="form-label mb-0">الكمية:</label>
+
+            <div class="input-group input-group-sm" style="width: 120px;">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="decreaseQty()">-</button>
+                <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ $product->stock }}" readonly class="form-control text-center">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="increaseQty({{ $product->stock }})">+</button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success ">أضف إلى السلة</button>
+    </form>
+
+    <script>
+        function increaseQty(max) {
+            const input = document.getElementById('quantity');
+            if (parseInt(input.value) < max) {
+                input.value = parseInt(input.value) + 1;
+            }
+        }
+
+        function decreaseQty() {
+            const input = document.getElementById('quantity');
+            if (parseInt(input.value) > 1) {
+                input.value = parseInt(input.value) - 1;
+            }
+        }
+    </script>
+@else
+    <button class="btn btn-secondary btn-sm" disabled>غير متوفر حالياً</button>
+@endif
+
+
             </div>
         </div>
     </div>
