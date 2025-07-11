@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Discount;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -44,9 +45,14 @@ class HomeController extends Controller
         ->get(); 
        
         //لعرض الكتب الاكثر مبيعا
-        $bestSellingProducts = Product::withCount('orderItems')
-        ->orderByDesc('order_items_count')->take(10)->get();
-
+        $bestSellingProducts = Product::withCount([
+        'orderItems as total_sold' => function ($query) {
+        $query->select(DB::raw('SUM(quantity)'));
+      }
+        ])
+      ->having('total_sold', '>', 3) // دا اللي يمنع المنتجات اللي مفيهاش مبيعات
+      ->orderByDesc('total_sold')->take(10)->get();
+      
        return view('website.home', compact( 'products', 'sliderBooks', 'discounts', 'latestProducts', 'bestSellingProducts'));
     }
 

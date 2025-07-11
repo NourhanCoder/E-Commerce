@@ -323,6 +323,11 @@
         {{ $product->author ?? 'غير معروف' }}
       </div>
 
+      <div class="text-center small fw-bold text-primary">
+        🛒تم بيع {{ $product->total_sold }} نسخة
+      </div>
+
+
       <div class="product__price text-center d-flex gap-2 justify-content-center flex-wrap">
         @if ($product->discount_price)
           <span class="product__price product__price--old">
