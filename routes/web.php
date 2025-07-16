@@ -14,22 +14,23 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DiscountController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
-
-Route::get('/', function () {
-    return view('website.home');
-})->name('home.page');
+use App\Http\Controllers\PaymentController;
 
 // Route::get('/dashboard', function () {
 //     return view('dashboard');
 // })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+// Route::middleware('auth')->group(function () {
+//     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+//     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+//     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+// });
 
 //Website Routes
+Route::get('/', function () {
+    return view('website.home');
+})->name('home.page');
+
 //Home Page
 Route::get('/', [HomeController::class, 'index'])->name('home.page');
 Route::get('/category/{category}', [HomeController::class, 'productsByCategory'])->name('products.byCategory');
@@ -72,6 +73,12 @@ Route::middleware('auth')->prefix('orders')->name('orders.')->group(function () 
     Route::get('/details/{order}', [OrderController::class, 'show'])->name('show');
 });
 
+//payment Integrations
+Route::middleware('auth')->prefix('payment')->name('payment.')->group(function () {
+    Route::get('/iframe', [PaymentController::class, 'getPaymentIframe'])->name('iframe');
+
+    Route::get('/callback', [PaymentController::class, 'paymentCallback'])->name('callback');
+});
 
 
 
