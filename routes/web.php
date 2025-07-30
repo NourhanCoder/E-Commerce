@@ -45,10 +45,10 @@ Route::middleware(['auth'])->group(function () {
 
 //Add to cart
 Route::prefix('cart')->name('cart.')->group(function() {
-    Route::get('/', [CartController::class, 'index'])->name('index'); //لعرض السلة
-    Route::post('add/{product}', [CartController::class, 'add'])->name('add'); // إضافة منتج
-    Route::post('update/{product}', [CartController::class, 'updateQnty'])->name('update'); // تحديث الكمية
-    Route::delete('remove/{product}', [CartController::class, 'destroy'])->name('remove'); // حذف المنتج
+    Route::get('/', [CartController::class, 'index'])->name('index'); 
+    Route::post('add/{product}', [CartController::class, 'add'])->name('add'); 
+    Route::post('update/{product}', [CartController::class, 'updateQnty'])->name('update'); 
+    Route::delete('remove/{product}', [CartController::class, 'destroy'])->name('remove'); 
 
 });
 

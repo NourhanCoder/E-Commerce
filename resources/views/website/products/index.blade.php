@@ -16,7 +16,7 @@
     @if ($products->count())
         <div class="row">
             @foreach ($products as $product)
-                <div class="col-md-2 col-sm-4 col-6 mb-4"> {{-- حجم أصغر لكل كتاب --}}
+                <div class="col-md-2 col-sm-4 col-6 mb-4"> 
                     <div class="card h-100 position-relative shadow-sm" style="font-size: 14px;">
                         
                         {{-- علامة الخصم --}}
@@ -73,6 +73,7 @@
 
                             <form method="POST" action="{{ route('cart.add', $product->id) }}">
                               @csrf
+                               <input type="hidden" name="quantity" value="1">
                              <button type="submit" class="btn btn-success btn-sm w-100">أضف إلى السلة</button>
                             </form>
                             </div>

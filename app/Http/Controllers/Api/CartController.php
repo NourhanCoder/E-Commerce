@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
@@ -53,39 +53,41 @@ class CartController extends Controller
             session()->put('cart', $cart);
         }
 
-        return redirect()->back()->with('success', 'تمت إضافة المنتج إلى السلة');
+        return response()->json([
+            'message' => 'تمت إضافة المنتج إلى السلة بنجاح',
+        ]);
     }
 
-
-    public function index()
+    public function index(Request $request)
     {
-        if (Auth::check()) {
-            $cartItems = Auth::user()->cartItems()->with('product')->get();
+        $user = $request->user(); // بديل Auth::user()
 
-            $cart = [];
-            $total = 0;
-            foreach ($cartItems as $item) {
-                $product = $item->product;
-                $price = $product->discounted_price ?? $product->price;
-                $cart[$product->id] = [
-                    'title' => $product->title,
-                    'price' => $price,
-                    'image' => $product->image,
-                    'quantity' => $item->quantity,
-                ];
-                $total += $price * $item->quantity;
-            }
-        } else {
-            $cart = session()->get('cart', []);
-            $total = 0;
-            foreach ($cart as $item) {
-                $total += $item['price'] * $item['quantity'];
-            }
+        $cartItems = $user->cartItems()->with('product')->get();
+
+        $cart = [];
+        $total = 0;
+
+        foreach ($cartItems as $item) {
+            $product = $item->product;
+            $price = $product->discounted_price ?? $product->price;
+
+            $cart[] = [
+                'product_id' => $product->id,
+                'title' => $product->title,
+                'price' => $price,
+                'image' => $product->image,
+                'quantity' => $item->quantity,
+                'subtotal' => $price * $item->quantity,
+            ];
+
+            $total += $price * $item->quantity;
         }
 
-        return view('website.home', compact('cart', 'total'));
+        return response()->json([
+            'cart' => $cart,
+            'total' => $total,
+        ]);
     }
-
 
     public function updateQnty(Request $request, Product $product)
     {
@@ -153,7 +155,6 @@ class CartController extends Controller
         }
     }
 
-
     public function destroy(Request $request, Product $product)
     {
         $productId = $product->id;
@@ -168,6 +169,8 @@ class CartController extends Controller
             }
         }
 
-        return redirect()->back()->with('success', 'تم حذف المنتج من السلة.');
+        return response()->json([
+            'message' => 'تم حذف المنتج من السلة بنجاح',
+        ], 200);
     }
 }

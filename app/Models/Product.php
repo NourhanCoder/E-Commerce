@@ -53,7 +53,7 @@ public function getDiscountedPriceAttribute()
 {
     $discount = null;
 
-    // لو الخصم محمّل بالفعل
+    // لو الخصم محمل بالفعل
     if ($this->relationLoaded('discount') && $this->discount) {
         if (
             $this->discount->start_date <= now() &&
