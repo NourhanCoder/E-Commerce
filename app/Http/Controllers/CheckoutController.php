@@ -15,11 +15,24 @@ class CheckoutController extends Controller
 {
     public function index()
     {
-        $cart = session()->get('cart', []);
+        $user = Auth::user();
 
+        $cartItems = $user->cartItems()->with('product')->get();
 
-        $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $cart = [];
+        $total = 0;
 
+        foreach ($cartItems as $item) {
+            $product = $item->product;
+            $price = $product->discounted_price ?? $product->price;
+            $cart[$product->id] = [
+                'title' => $product->title,
+                'price' => $price,
+                'image' => $product->image,
+                'quantity' => $item->quantity,
+            ];
+            $total += $price * $item->quantity;
+        }
         return view('website.orders.checkOut', compact('cart', 'total'));
     }
 
