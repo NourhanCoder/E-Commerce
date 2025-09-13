@@ -28,14 +28,14 @@ class OrderController extends Controller
     $oldStatus = $order->status;
     $newStatus = $request->status;
 
-    // لو اتحول من pending/cancelled إلى cancelled → نرجع الكمية
+    // لو اتحول من pending/cancelled إلى cancelled  نرجع الكمية
     if (in_array($oldStatus, ['pending', 'processing', 'shipped']) && $newStatus == 'cancelled') {
         foreach ($order->orderItems as $item) {
             $item->product->increment('stock', $item->quantity);
         }
     }
 
-    // لو اتحول من cancelled إلى حالة تانية → نخصم الكمية تاني
+    // لو اتحول من cancelled إلى حالة تانية  نخصم الكمية تاني
     if ($oldStatus == 'cancelled' && in_array($newStatus, ['pending', 'processing', 'shipped'])) {
         foreach ($order->orderItems as $item) {
             // تأكد إن الكمية متوفرة

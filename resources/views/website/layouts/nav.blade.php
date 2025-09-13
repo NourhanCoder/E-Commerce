@@ -18,6 +18,7 @@
                 <i class="fa-solid fa-magnifying-glass"></i>
             </span>
         </div>
+        @auth {{-- المستخدم مسجل دخول --}}
         <ul class="nav__links gap-3 list-unstyled d-none d-lg-flex m-0">
             <li class="nav__link nav__link-user">
                 <a class="d-flex align-items-center gap-2">
@@ -25,7 +26,7 @@
                     <i class="fa-regular fa-user"></i>
                     <i class="fa-solid fa-chevron-down fa-2xs"></i>
                 </a>
-                @auth {{-- المستخدم مسجل دخول --}}
+                
                     <ul class="nav__user-list position-absolute p-0 list-unstyled bg-white">
                         <li class="nav__link nav__user-link"><a href="profile.html">لوحة التحكم</a></li>
                         <li class="nav__link nav__user-link"><a href="{{ route('orders.index') }}">الطلبات</a></li>
@@ -88,12 +89,15 @@
                 <i class="fa-solid fa-align-center fa-rotate-180"></i>
                 الاقسام
             </li>
+
+    
             <li class="nav-mobile__link d-flex align-items-center flex-column gap-1">
                 <a class="d-flex align-items-center flex-column gap-1 text-decoration-none" href="profile.html">
                     <i class="fa-regular fa-user"></i>
                     حسابي
                 </a>
             </li>
+
             <li class="nav-mobile__link d-flex align-items-center flex-column gap-1">
                 <a class="d-flex align-items-center flex-column gap-1 text-decoration-none" href="favourites.html">
                     <i class="fa-regular fa-heart"></i>
