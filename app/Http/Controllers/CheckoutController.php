@@ -171,7 +171,7 @@ class CheckoutController extends Controller
 
             DB::commit();
 
-            return redirect()->route('checkout.index')->with('success', 'تم إلغاء الطلب وإرجاع الكمية بنجاح.');
+            return redirect()->route('orders.index')->with('success', 'تم إلغاء الطلب وإرجاع الكمية بنجاح.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withErrors(['error' => 'حدث خطأ أثناء إلغاء الطلب.']);

@@ -13,10 +13,8 @@
             </a>
         </div>
         <div class="nav__search w-100">
-            <input class="nav__search-input w-100" type="search" placeholder="أبحث هنا عن اي شئ تريده...">
-            <span class="nav__search-icon">
-                <i class="fa-solid fa-magnifying-glass"></i>
-            </span>
+           <livewire:navbar-search />
+           
         </div>
         @auth {{-- المستخدم مسجل دخول --}}
         <ul class="nav__links gap-3 list-unstyled d-none d-lg-flex m-0">

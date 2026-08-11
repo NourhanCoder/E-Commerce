@@ -50,6 +50,19 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
+        // نقل محتوى السلة من السيشن إلى قاعدة البيانات
+        $cart = session()->get('cart', []);
+        $user = auth()->user();
+
+        foreach ($cart as $productId => $item) {
+            $user->cartItems()->updateOrCreate(
+                ['product_id' => $productId],
+                ['quantity' => $item['quantity']]
+            );
+        }
+
+        session()->forget('cart');
+
         // return redirect(route('dashboard', absolute: false));
         return redirect(route('home.page', absolute: false));
     }

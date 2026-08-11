@@ -16,8 +16,15 @@
                         <div class="slide justify-content-center align-items-center">
                             {{-- الكتاب الأول --}}
                             @if ($chunk->get(0))
-                                <div class="book book-left">
+                                <div class="book book-left position-relative">
                                     <img src="{{ $chunk[0]->image() }}" alt="{{ $chunk[0]->title }}">
+                                    {{-- بادج الخصم فقط لو موجود --}}
+                                    @if (isset($chunk[0]->active_discount) && $chunk[0]->active_discount)
+                                        <div class="product__sale position-absolute top-0 start-0 m-2 px-2 py-1 rounded-1 text-white bg-danger fw-bold small"
+                                            style="z-index: 5;">
+                                            وفر {{ $chunk[0]->active_discount->percentage }}%
+                                        </div>
+                                    @endif
                                 </div>
                             @endif
 
@@ -25,8 +32,15 @@
 
                             {{-- الكتاب الثاني (لو موجود) --}}
                             @if ($chunk->get(1))
-                                <div class="book book-right">
+                                <div class="book book-right position-relative">
                                     <img src="{{ $chunk[1]->image() }}" alt="{{ $chunk[1]->title }}">
+                                    {{-- بادج الخصم فقط لو موجود --}}
+                                    @if (isset($chunk[1]->active_discount) && $chunk[1]->active_discount)
+                                        <div class="product__sale position-absolute top-0 start-0 m-2 px-2 py-1 rounded-1 text-white bg-danger fw-bold small"
+                                            style="z-index: 5;">
+                                            وفر {{ $chunk[1]->active_discount->percentage }}%
+                                        </div>
+                                    @endif
                                 </div>
                             @endif
                         </div>
@@ -235,7 +249,7 @@
                                         alt="{{ $product->title }}">
                                 </div>
                             </a>
-                            
+
 
                             @if ($discount)
                                 <div
@@ -247,9 +261,10 @@
                             <div class="toggle-favourite position-absolute top-0 start-0 m-2 rounded-circle bg-white d-flex justify-content-center align-items-center"
                                 data-product-id="{{ $product->id }}"
                                 style="width: 35px; height: 35px; cursor: pointer; left: 0 !important; right: auto !important;">
-                                <i class="fa-heart
+                                <i
+                                    class="fa-heart
                               @auth
-                             {{ auth()->user()->favourites->where('product_id', $product->id)->count() ? 'fa-solid text-danger' : 'fa-regular' }}
+{{ auth()->user()->favourites->where('product_id', $product->id)->count() ? 'fa-solid text-danger' : 'fa-regular' }}
                                @else
                                fa-regular @endauth"></i>
                             </div>
@@ -269,14 +284,14 @@
                         <div class="product__price text-center d-flex gap-2 justify-content-center flex-wrap">
                             @if ($discount)
                                 <span class="product__price product__price--old">
-                                    {{ $product->price }} جنيه
+                                    {{number_format($product->price, 2)  }} جنيه
                                 </span>
                                 <span class="product__price text-danger fw-bold">
-                                    {{ $product->discounted_price }} جنيه
+                                    {{ number_format($product->discounted_price, 2) }} جنيه
                                 </span>
                             @else
                                 <span class="product__price">
-                                    {{ $product->price }} جنيه
+                                    {{ number_format($product->price, 2) }} جنيه
                                 </span>
                             @endif
                         </div>
@@ -292,59 +307,67 @@
                 <button class="products__btn py-2 px-3 rounded-1">تسوق الأن</button>
             </div>
             <div class="owl-carousel products__slider owl-theme">
-  @foreach ($bestSellingProducts as $product)
-    <div class="products__item">
-      <div class="product__header mb-3">
-        <a href="{{ route('single.page', $product->id) }}">
-          <div class="product__img-cont">
-            <img class="product__img w-100 h-100 object-fit-cover"
-                 src="{{ $product->image() }}" alt="{{ $product->title }}">
-          </div>
-        </a>
+                @foreach ($bestSellingProducts as $product)
+                    <div class="products__item">
+                        <div class="product__header mb-3">
+                            <a href="{{ route('single.page', $product->id) }}">
+                                <div class="product__img-cont">
+                                    <img class="product__img w-100 h-100 object-fit-cover" src="{{ $product->image() }}"
+                                        alt="{{ $product->title }}">
+                                </div>
+                            </a>
 
-        @if ($product->discount_percentage)
-          <div class="product__sale position-absolute top-0 start-0 m-1 px-2 py-1 rounded-1 text-white">
-            وفر {{ $product->discount_percentage }}%
-          </div>
-        @endif
+                            @if ($product->active_discount)
+                                <div
+                                    class="product__sale position-absolute top-0 start-0 m-1 px-2 py-1 rounded-1 text-white bg-danger small">
+                                    وفر {{ $product->active_discount->percentage }}%
+                                </div>
+                            @endif
 
-        <div class="product__favourite position-absolute top-0 end-0 m-1 rounded-circle d-flex justify-content-center align-items-center bg-white">
-          <i class="fa-regular fa-heart"></i>
-        </div>
-      </div>
+                            <div class="toggle-favourite position-absolute top-0 start-0 m-2 rounded-circle bg-white d-flex justify-content-center align-items-center"
+                                data-product-id="{{ $product->id }}"
+                                style="width: 35px; height: 35px; cursor: pointer; left: 0 !important; right: auto !important;">
+                                <i
+                                    class="fa-heart
+                              @auth
+{{ auth()->user()->favourites->where('product_id', $product->id)->count() ? 'fa-solid text-danger' : 'fa-regular' }}
+                               @else
+                               fa-regular @endauth"></i>
+                            </div>
+                        </div>
 
-      <div class="product__title text-center">
-        <a class="text-black text-decoration-none" href="{{ route('single.page', $product->id) }}">
-          {{ $product->title }}
-        </a>
-      </div>
+                        <div class="product__title text-center">
+                            <a class="text-black text-decoration-none" href="{{ route('single.page', $product->id) }}">
+                                {{ $product->title }}
+                            </a>
+                        </div>
 
-      <div class="product__author text-center">
-        {{ $product->author ?? 'غير معروف' }}
-      </div>
+                        <div class="product__author text-center">
+                            {{ $product->author ?? 'غير معروف' }}
+                        </div>
 
-      <div class="text-center small fw-bold text-primary">
-        🛒تم بيع {{ $product->total_sold }} نسخة
-      </div>
+                        <div class="text-center small fw-bold text-primary">
+                            🛒تم بيع {{ $product->total_sold }} نسخة
+                        </div>
 
 
-      <div class="product__price text-center d-flex gap-2 justify-content-center flex-wrap">
-        @if ($product->discount_price)
-          <span class="product__price product__price--old">
-            {{ number_format($product->price, 2) }} جنيه
-          </span>
-          <span class="product__price">
-            {{ number_format($product->discount_price, 2) }} جنيه
-          </span>
-        @else
-          <span class="product__price">
-            {{ number_format($product->price, 2) }} جنيه
-          </span>
-        @endif
-      </div>
-    </div>
-  @endforeach
-</div>
+                        <div class="product__price text-center d-flex gap-2 justify-content-center flex-wrap">
+                            @if ($product->active_discount)
+                                <span class="product__price product__price--old">
+                                    {{ number_format($product->price, 2) }} جنيه
+                                </span>
+                                <span class="product__price text-danger fw-bold">
+                                    {{ number_format($product->discounted_price, 2) }} جنيه
+                                </span>
+                            @else
+                                <span class="product__price">
+                                    {{ number_format($product->price, 2) }} جنيه
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
 
         </section>
         <!-- Best Sales Section End -->
@@ -377,9 +400,10 @@
                             <div class="toggle-favourite position-absolute top-0 start-0 m-2 rounded-circle bg-white d-flex justify-content-center align-items-center"
                                 data-product-id="{{ $product->id }}"
                                 style="width: 35px; height: 35px; cursor: pointer; left: 0 !important; right: auto !important;">
-                                <i class="fa-heart
+                                <i
+                                    class="fa-heart
                               @auth
-                             {{ auth()->user()->favourites->where('product_id', $product->id)->count() ? 'fa-solid text-danger' : 'fa-regular' }}
+{{ auth()->user()->favourites->where('product_id', $product->id)->count() ? 'fa-solid text-danger' : 'fa-regular' }}
                                @else
                                fa-regular @endauth"></i>
                             </div>
@@ -398,14 +422,14 @@
                         <div class="product__price text-center d-flex gap-2 justify-content-center flex-wrap">
                             @if ($product->active_discount)
                                 <span class="product__price product__price--old text-muted">
-                                    {{ $product->price }} جنيه
+                                    {{ number_format($product->price, 2) }} جنيه
                                 </span>
                                 <span class="product__price text-danger fw-bold">
-                                    {{ $product->discounted_price }} جنيه
+                                    {{number_format( $product->discounted_price, 2) }} جنيه
                                 </span>
                             @else
                                 <span class="product__price fw-bold">
-                                    {{ $product->price }} جنيه
+                                    {{ number_format($product->price, 2) }} جنيه
                                 </span>
                             @endif
                         </div>

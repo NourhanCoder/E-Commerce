@@ -16,57 +16,53 @@ class HomeController extends Controller
      */
     public function index()
     {
-        //لعرض 10 منتجات مع الخصومات ان وجدت
-        $products = Product::with(['discount' => function ($q) {
-        $q->where('start_date', '<=', now())
-        ->where('end_date', '>=', now());
-       }])->take(10)->get();
+        //1. Get 10 products with discounts if available
+        $products = Product::withActiveDiscount()->take(10)->get();
+      
 
-        // لعرض احدث المنتجات مع الخصومات ان وجدت
-        $latestProducts = Product::with(['discount' => function ($q) {
-        $q->where('start_date', '<=', now())
-        ->where('end_date', '>=', now());
-        }])->latest()->take(10)->get();
-    
+        //2. Gets the 10 latest products with active discounts
+        $latestProducts = Product::withActiveDiscount()->latest()->take(10)->get();
+
+        //3. Gets the latest 4 books with discounts to avoid N+1 queries
+        $sliderBooks = Product::withActiveDiscount()->latest()->take(4)->get();
+
+        //4. Current discounts for the timer
+        $discounts = Discount::with('product') 
+        ->active()
+        ->orderBy('end_date', 'asc')
+        ->get(); 
+
+        //5. Best-selling books
+        $bestSellingProducts = Product::withActiveDiscount()
+        ->bestSelling(minSold: 3, limit: 10)
+        ->get();
+      
+       return view('website.home', compact( 
+        'products', 
+        'sliderBooks', 
+        'discounts', 
+        'latestProducts',
+        'bestSellingProducts'
+        ));
+       
         // جلب التصنيفات الرئيسية ومعاها التصنيفات الفرعية
         // $categories = Category::with('children')->whereNull('parent_id')->get();
 
         // لو حبيت اعرض الكتاب بينتمي ل انهي تصنيف
-        // $products = Product::with('category')->latest()->take(10)->get();
-
-        // احدث 4 كتب للسلايدر
-        $sliderBooks = Product::orderBy('id', 'desc')->take(4)->get();
-
-        // جلب كل الخصومات الحالية (اللي بدأت ولسه منتهتش) للتايمر
-        $discounts = Discount::with('product') // جلب بيانات الكتاب المرتبط
-         ->whereDate('start_date', '<=', Carbon::today())
-        ->whereDate('end_date', '>=', Carbon::today())
-        ->orderBy('end_date', 'asc')
-        ->get(); 
-       
-        //لعرض الكتب الاكثر مبيعا
-        $bestSellingProducts = Product::withCount([
-        'orderItems as total_sold' => function ($query) {
-        $query->select(DB::raw('SUM(quantity)'));
-      }
-        ])
-      ->having('total_sold', '>', 3) // دا اللي يمنع المنتجات اللي مفيهاش مبيعات
-      ->orderByDesc('total_sold')->take(10)->get();
-      
-       return view('website.home', compact( 'products', 'sliderBooks', 'discounts', 'latestProducts', 'bestSellingProducts'));
+        // $products = Product::with('category')->latest()->take(10)->get();   
+   
     }
 
+
+    /**
+ * Show products from a specific category
+ */
     public function productsByCategory(Category $category)
    {
-       // نجيب المنتجات مع علاقتها بالخصم الساري
+       // Get products with their active discount
        $products = $category->products()
-        ->with([
-            'category',
-            'discount' => function ($query) {
-            $query->where('start_date', '<=', now())
-            ->where('end_date', '>=', now());
-            }
-        ])
+       ->withActiveDiscount()
+        ->with('category')
         ->latest()
         ->paginate(12);
 
@@ -75,13 +71,13 @@ class HomeController extends Controller
 
 
     /**
-     * Display the specified resource.
-     */
+ * Show details of a specific product
+ */
     public function show(Product $product)
     {
-        // جلب الخصم الحالي للمنتج (إن وجد)
-        //تم استخدام دالة اكسيسور من داخل الموديل لتحسين الاداء
+
      return view('website.products.show', compact('product'));
+     
     }
 
 }
