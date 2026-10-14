@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Enums\UserType;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -52,9 +53,9 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
         // توجيه حسب النوع
-        if (auth()->user()->type === 'admin') {
+        if (auth()->user()->type === UserType::Admin) {
             return redirect()->route('admin.panel');
-        } elseif (auth()->user()->type === 'customer') {
+        } elseif (auth()->user()->type === UserType::Customer) {
             return redirect()->route('home.page'); // أو أي صفحة رئيسية للمستخدم
         }
 

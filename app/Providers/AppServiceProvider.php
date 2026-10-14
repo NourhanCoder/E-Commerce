@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use App\Enums\UserType;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Gate for admin access
         Gate::define('admin-control', function (User $user) {
-            return $user->type === 'admin';
+            return $user->type === UserType::Admin;
         });
     }
 
