@@ -5,21 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Services\CartService;
 use Illuminate\Http\Request;
+use App\Http\Requests\Cart\AddToCartRequest;
 
 class CartController extends Controller
 {
     public function __construct(private CartService $cart)
     {
     }
-    public function add(Request $request, Product $product)
+    public function add(AddToCartRequest $request, Product $product)
     {
-        $validated = $request->validate([
-            'quantity' => 'required|integer|min:1|max:' . $product->stock,
-        ]);
 
-        $this->cart->add($product, $validated['quantity']);
+        $this->cart->add($product, $request->validated()['quantity']);
 
-        return redirect()->back()->with('success', 'تمت إضافة المنتج إلى السلة');
+        return redirect()->back()->with('success', __('cart.added'));
 
     }
 
@@ -44,6 +42,6 @@ class CartController extends Controller
     {
        $this->cart->remove($product);
 
-        return redirect()->back()->with('success', 'تم حذف المنتج من السلة');
+        return redirect()->back()->with('success',  __('cart.removed'));
     }
 }

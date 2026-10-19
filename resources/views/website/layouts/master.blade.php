@@ -47,6 +47,9 @@
   </div>
   <!-- Header Content End -->
 
+  <!-- Flash Messages -->
+  <x-flash-messages />
+
   <!-- Page Content Start -->
   @yield('content')
   <!-- Page Content End -->

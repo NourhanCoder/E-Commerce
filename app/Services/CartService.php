@@ -95,7 +95,7 @@ class CartService
                 if($item->quantity >= $product->stock){
                     return [
                         'success' => false,
-                        'message' => 'الكمية المطلوبة غير متوفرة في المخزون',
+                        'message' => __('cart.out_of_stock'),
                     ];
                 }
 
@@ -128,7 +128,7 @@ class CartService
             if ($cart[$product->id]['quantity'] >= $product->stock) {
                 return [
                     'success' => false,
-                    'message' => 'الكمية المطلوبة غير متوفرة في المخزون',
+                    'message' => __('cart.out_of_stock'),
                 ];
             }
 
