@@ -5,7 +5,7 @@
 @section('content')
   <div class="container" style="margin-top: 130px;">
         <div class="row align-items-center">
-            <!-- صورة المنتج -->
+            <!-- Product image-->
             <div class="col-md-4 text-center mt-4 mb-md-0 position-relative">
                 @if ($product->image)
                     <img src="{{ $product->image() }}" alt="{{ $product->title }}" class="img-fluid rounded shadow"
@@ -21,7 +21,7 @@
              fa-regular @endauth"></i>
                 </div>
                 @if ($product->active_discount)
-                    <!-- شارة الخصم -->
+                    <!-- Discount badge-->
                     <div class="badge bg-danger position-absolute top-0 start-0 m-2 px-2 py-1 fs-6">
                         خصم {{ $product->active_discount->percentage }}%
                     </div>
@@ -31,7 +31,7 @@
 
 
 
-            <!-- تفاصيل المنتج -->
+            <!-- Product details-->
             <div class="col-md-8">
                 <h2 class="mb-3">{{ $product->title }}</h2>
 
@@ -49,7 +49,7 @@
                     </div>
                 </div>
 
-                <!-- السعر -->
+                <!-- Price-->
                 @if ($product->active_discount)
                     <h4 class="fw-bold mb-3">
                         <span class="text-danger">{{ $product->discounted_price }} جنيه</span>
@@ -63,7 +63,7 @@
 
 
 
-                <!-- حالة التوفر -->
+                <!-- Available status-->
         <div class="mb-3">
              <strong>الحالة:</strong>
              
