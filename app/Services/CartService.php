@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class CartService
@@ -168,5 +169,19 @@ class CartService
             unset($cart[$product->id]);
             session()->put('cart', $cart);
         }
+    }
+
+    public function mergeGuestCart(User $user): void
+    {
+        $cart = session()->get('cart', []);
+
+        foreach($cart as $productId => $item){
+            $user->cartItems()->updateOrCreate(
+                ['product_id' => $productId],
+                ['quantity' => $item['quantity']]
+            );
+        }
+
+        session()->forget('cart');
     }
 }
