@@ -6,30 +6,35 @@ use Illuminate\Support\Facades\Auth;
 
 class CartService
 {
-    public function add(Product $product, int $quantity): void
+    public function add(Product $product, int $quantity): int
     {
         if(Auth::check()){
             $user = Auth::user();
             $cartItem = $user->cartItems()->where('product_id', $product->id)->first();
 
+            $current = $cartItem->quantity ?? 0;
+            $newQuantity = min($current + $quantity, $product->stock);
+
             if($cartItem){
-                $newQuantity = min($cartItem->quantity + $quantity, $product->stock);
                 $cartItem->update(['quantity' => $newQuantity]);
 
             }else{
                 $user->cartItems()->create([
                     'product_id' => $product->id,
-                    'quantity' => $quantity,
+                    'quantity' => $newQuantity,
                 ]);
 
             }
-              return;
+              return max(0, $newQuantity - $current);
         }
 
         $cart = session()->get('cart', []);
 
+        $current = $cart[$product->id]['quantity'] ?? 0;
+        $newQuantity = min($current + $quantity, $product->stock);
+
         if(isset($cart[$product->id])){
-            $cart[$product->id]['quantity'] = min($cart[$product->id]['quantity'] + $quantity, $product->stock);
+            $cart[$product->id]['quantity'] = $newQuantity;
 
         }else{
             $cart[$product->id] = [
@@ -37,11 +42,12 @@ class CartService
                 'title' => $product->title,
                 'price' => $product->discounted_price ?? $product->price,
                 'image' => $product->image(),
-                'quantity' => $quantity,
+                'quantity' => $newQuantity,
             ];
         }
 
         session()->put('cart', $cart);
+        return max(0, $newQuantity - $current);
     }
 
     // Aggregate cart items for display and calculate total amount

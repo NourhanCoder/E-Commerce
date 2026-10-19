@@ -14,9 +14,22 @@ class CartController extends Controller
     }
     public function add(AddToCartRequest $request, Product $product)
     {
+        $requested = $request->validated()['quantity'];
+        $added = $this->cart->add($product, $requested);
 
-        $this->cart->add($product, $request->validated()['quantity']);
+        if($added === 0){
+            return redirect()->back()->with('warning', __('cart.already_max', [
+            'stock' => $product->stock,
+            ]));
+        }
 
+        if($added < $requested){
+             return redirect()->back()->with('warning', __('cart.added_partial', [
+            'added' => $added,
+            'stock' => $product->stock,
+            ]));
+        }
+        
         return redirect()->back()->with('success', __('cart.added'));
 
     }
