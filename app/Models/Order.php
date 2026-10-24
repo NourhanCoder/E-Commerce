@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -10,6 +11,13 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = ['total_price', 'status', 'user_id'];
+
+     protected function casts(): array
+    {
+        return [
+            'status' => OrderStatus::class,
+        ];
+    }
 
     public function user()
     {
@@ -31,17 +39,9 @@ class Order extends Model
        return $this->belongsTo(Address::class, 'user_id', 'user_id');
     }
 
-    public function getStatusTextAttribute()
+    public function getStatusTextAttribute(): string
     {
-       $statuses = [
-        'pending' => 'قيد التنفيذ',
-        'processing' => 'التجهيز',
-        'shipped' => 'الشحن',
-        'delivered' => 'النوصيل',
-        'cancelled' => 'ملغي',
-       ];
-
-       return $statuses[$this->status] ?? $this->status;
-   }
+      return $this->status->label();
+    }
 
 }

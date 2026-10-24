@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\OrderStatus;
+use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-
+use Illuminate\Validation\Rule;
 class OrderController extends Controller
 {
     public function index()
@@ -16,29 +17,32 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-    return view('admin.orders.show', compact('order'));
+       return view('admin.orders.show', compact('order'));
     }
 
     public function updateStatus(Request $request, Order $order)
     {
-        $request->validate([
-        'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
+        $validated = $request->validate([
+        'status' => ['required', Rule::enum(OrderStatus::class)],
     ]);
 
     $oldStatus = $order->status;
-    $newStatus = $request->status;
+    $newStatus = OrderStatus::from($validated['status']);
 
-    // لو اتحول من pending/cancelled إلى cancelled  نرجع الكمية
-    if (in_array($oldStatus, ['pending', 'processing', 'shipped']) && $newStatus == 'cancelled') {
+    $activeStatuses = [OrderStatus::Pending, OrderStatus::Processing, OrderStatus::Shipped];
+
+    // Cancelling an active order: give the quantities back to the stock
+    if (in_array($oldStatus, $activeStatuses, true) && $newStatus == OrderStatus::Cancelled) {
         foreach ($order->orderItems as $item) {
             $item->product->increment('stock', $item->quantity);
         }
     }
 
-    // لو اتحول من cancelled إلى حالة تانية  نخصم الكمية تاني
-    if ($oldStatus == 'cancelled' && in_array($newStatus, ['pending', 'processing', 'shipped'])) {
+    // Re-activating a cancelled order: take the quantities from the stock again
+    if ($oldStatus == OrderStatus::Cancelled && in_array($newStatus, $activeStatuses, true)) {
         foreach ($order->orderItems as $item) {
-            // تأكد إن الكمية متوفرة
+            
+            // Verify stock availability
             if ($item->product->stock < $item->quantity) {
                 return redirect()->back()->withErrors(['error' => "الكمية غير متوفرة للمنتج: {$item->product->title}"]);
             }

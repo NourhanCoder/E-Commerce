@@ -7,6 +7,7 @@ use App\Models\Address;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\OrderItem;
+use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -151,7 +152,7 @@ class CheckoutController extends Controller
 
     public function cancel(Order $order)
     {
-        if ($order->user_id !== Auth::id() || $order->status !== 'pending') {
+        if ($order->user_id !== Auth::id() || $order->status !== OrderStatus::Pending) {
             abort(403, 'غير مسموح لك بإلغاء هذا الطلب.');
         }
 
@@ -167,7 +168,7 @@ class CheckoutController extends Controller
             }
 
             // تغيير حالة الطلب إلى ملغي
-            $order->update(['status' => 'cancelled']);
+            $order->update(['status' => OrderStatus::Cancelled]);
 
             DB::commit();
 
