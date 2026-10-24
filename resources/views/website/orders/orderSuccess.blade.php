@@ -40,7 +40,7 @@
       <p class="mb-1">سيقوم أحد ممثلي خدمة العملاء بالتواصل معك لتأكيد الطلب</p>
       <p>برجاء الرد على الأرقام الغير مسجلة</p>
       <a href="{{ route('home.page') }}" class="primary-button">تصفح منتجات أخرى</a>
-      @if ($order->status === 'pending')
+      @if ($order->status === \App\Enums\OrderStatus::Pending)
     <form action="{{ route('checkout.cancel', $order->id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من إلغاء الطلب؟')">
         @csrf
         @method('PATCH')
@@ -98,7 +98,7 @@
           <td class="fw-bold">{{ number_format($order->total_price, 2) }} جنيه</td>
           <p class="mb-1">
           <span class="fw-bold">طريقة الدفع:</span>
-          {{ $order->payment->payment_method == 'cash' ? 'الدفع نقدا عند الاستلام' : 'الدفع بالبطاقة' }}
+         {{ $order->payment->payment_method === \App\Enums\PaymentMethod::Cash ? 'الدفع نقدا عند الاستلام' : 'الدفع بالبطاقة' }}
           </p>
 
         </tr>

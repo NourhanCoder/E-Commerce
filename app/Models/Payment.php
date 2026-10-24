@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentMethod;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -12,20 +13,24 @@ class Payment extends Model
     protected $fillable = 
     ['order_id', 'payment_method', 'transaction_id', 'amount', 'currency', 'status', 'paid_at'];
 
+    protected function casts(): array
+    {
+      return [
+        'payment_method' => PaymentMethod::class,
+      ];
+
+    }
+
     public function order()
     {
         return $this->belongsTo(Order::class);
     }
 
-    public function getPaymentMethodTextAttribute()
+    public function getPaymentMethodTextAttribute(): string
     {
-      $methods = [
-        'cash' => 'نقدا',
-        'card' => 'بالبطاقة',
-        
-      ];
 
-      return $methods[$this->payment_method] ?? $this->payment_method;
+      return $this->payment_method->label();
+
     }
 
 }

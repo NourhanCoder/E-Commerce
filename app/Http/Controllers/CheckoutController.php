@@ -7,7 +7,10 @@ use App\Models\Address;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\OrderItem;
+use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
+use App\Enums\PaymentMethod;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -43,7 +46,7 @@ class CheckoutController extends Controller
             'street' => 'required|string|max:500',
             'phone' => 'required|string|max:20',
             'note' => 'nullable|string|max:1000',
-            'payment_method' => 'required|in:cash,card',
+            'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
         ]);
 
         $user = Auth::user();
@@ -71,7 +74,7 @@ class CheckoutController extends Controller
         session()->put('checkout.total', $total);
 
         //لو نقدي هيكمل الطلب
-        if ($validated['payment_method'] === 'cash') {
+        if (PaymentMethod::from($validated['payment_method']) === PaymentMethod::Cash) {
             return $this->handleCashCheckout($validated, $cart, $total);
         }
 
@@ -101,7 +104,7 @@ class CheckoutController extends Controller
             $order = Order::create([
                 'user_id' => $user->id,
                 'total_price' => $total,
-                'status' => 'pending',
+                'status' => OrderStatus::Pending,
             ]);
 
             // حفظ عناصر الطلب وخصم المخزون
@@ -124,7 +127,7 @@ class CheckoutController extends Controller
             // وسيلة الدفع
             Payment::create([
                 'order_id' => $order->id,
-                'payment_method' => 'cash',
+                'payment_method' => PaymentMethod::Cash,
                 'amount' => $total,
                 'status' => 'pending',
             ]);
@@ -151,7 +154,7 @@ class CheckoutController extends Controller
 
     public function cancel(Order $order)
     {
-        if ($order->user_id !== Auth::id() || $order->status !== 'pending') {
+        if ($order->user_id !== Auth::id() || $order->status !== OrderStatus::Pending) {
             abort(403, 'غير مسموح لك بإلغاء هذا الطلب.');
         }
 
@@ -167,7 +170,7 @@ class CheckoutController extends Controller
             }
 
             // تغيير حالة الطلب إلى ملغي
-            $order->update(['status' => 'cancelled']);
+            $order->update(['status' => OrderStatus::Cancelled]);
 
             DB::commit();
 

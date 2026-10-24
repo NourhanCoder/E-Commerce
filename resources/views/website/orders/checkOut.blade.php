@@ -96,7 +96,7 @@
 <div class="mb-3">
   <label for="payment_method">طريقة الدفع<span class="required">*</span></label>
   <select name="payment_method" id="payment_method" class="form__input bg-transparent">
-    <option value="">اختر طريقة الدفع</option>
+    {{-- <option value="">اختر طريقة الدفع</option> --}}
     <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>الدفع نقدا عند الاستلام</option>
     <option value="card" {{ old('payment_method') == 'card' ? 'selected' : '' }}>الدفع بالبطاقة</option>
   </select>
