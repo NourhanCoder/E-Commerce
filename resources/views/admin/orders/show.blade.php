@@ -1,5 +1,6 @@
 @extends('admin.layouts.app')
 @use('App\Enums\OrderStatus')
+@use('App\Enums\PaymentMethod')
 
 @section('title', 'Order Details')
 @section('admin-content')
@@ -27,7 +28,7 @@
             {{-- Payment Methods --}}
             <div class="card p-4 mb-4">
                 <h4>Payment Method</h4>
-                <p>{{ $order->payment->payment_method == 'cash' ? 'Cash on Delivery' : 'Card' }}</p>
+                <p>{{ $order->payment->payment_method === PaymentMethod::Cash ? 'Cash on Delivery' : 'Card' }}</p>
             </div>
 
             {{-- Order status + Ability to Change --}}

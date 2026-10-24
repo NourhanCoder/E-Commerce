@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Models\Address;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product;
-use App\Models\OrderItem;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
@@ -69,7 +71,7 @@ class PaymentController extends Controller
             $order = Order::create([
                 'user_id' => $user->id,
                 'total_price' => $total,
-                'status' => 'pending',
+                'status' => OrderStatus::Pending,
             ]);
 
             foreach ($cart as $productId => $item) {
@@ -90,7 +92,7 @@ class PaymentController extends Controller
 
             Payment::create([
                 'order_id' => $order->id,
-                'payment_method' => 'card',
+                'payment_method' => PaymentMethod::Card,
                 'amount' => $total,
                 'status' => $request->paymentStatus ,
                'paid_at' => now(),

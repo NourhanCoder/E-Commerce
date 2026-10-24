@@ -98,7 +98,7 @@
           <td class="fw-bold">{{ number_format($order->total_price, 2) }} جنيه</td>
           <p class="mb-1">
           <span class="fw-bold">طريقة الدفع:</span>
-          {{ $order->payment->payment_method == 'cash' ? 'الدفع نقدا عند الاستلام' : 'الدفع بالبطاقة' }}
+         {{ $order->payment->payment_method === \App\Enums\PaymentMethod::Cash ? 'الدفع نقدا عند الاستلام' : 'الدفع بالبطاقة' }}
           </p>
 
         </tr>
