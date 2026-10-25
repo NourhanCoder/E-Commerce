@@ -3,19 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Models\Address;
-use App\Models\Payment;
-use App\Models\Product;
-use App\Models\OrderItem;
+use App\Services\OrderService;
 use App\Enums\OrderStatus;
-use Illuminate\Http\Request;
 use App\Enums\PaymentMethod;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Exceptions\InsufficientStockException;
 
 class CheckoutController extends Controller
 {
+    public function __construct(private OrderService $orders)
+    {
+        //
+    }
     public function index()
     {
         $user = Auth::user();
@@ -83,71 +85,35 @@ class CheckoutController extends Controller
     }
 
 
-    //لتنفيذ عملية الشراء نقدا من غير المرور على بوابة دفع كاشير
-    protected function handleCashCheckout($addressData, $cart, $total)
+    // Cash checkout: no payment gateway is involved
+    protected function handleCashCheckout(array $addressData, array $cart, float $total)
     {
-        DB::beginTransaction();
-
         try {
-            $user = Auth::user();
+            $order = $this->orders->placeOrder(
+                Auth::user(),
+                $addressData,
+                $cart,
+                $total,
+                PaymentMethod::Cash,
+                ['status' => 'pending'], //spread operator data
+            );
 
-            // حفظ العنوان
-            $address = Address::create([
-                'user_id' => $user->id,
-                'city' => $addressData['city'],
-                'street' => $addressData['street'],
-                'phone' => $addressData['phone'],
-                'note' => $addressData['note'] ?? null,
+        } catch (InsufficientStockException $e) {
+            return redirect()->back()->withErrors([
+                'error' => __('orders.out_of_stock', ['title' => $e->product->title]),
             ]);
+        } catch (\Throwable $e) {
+            report($e);
 
-            // إنشاء الطلب
-            $order = Order::create([
-                'user_id' => $user->id,
-                'total_price' => $total,
-                'status' => OrderStatus::Pending,
-            ]);
-
-            // حفظ عناصر الطلب وخصم المخزون
-            foreach ($cart as $productId => $item) {
-                $product = Product::find($productId);
-                if ($product->stock < $item['quantity']) {
-                    throw new \Exception("الكمية غير متوفرة للمنتج: {$product->title}");
-                }
-
-                $product->decrement('stock', $item['quantity']);
-
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $productId,
-                    'quantity' => $item['quantity'],
-                    'price_at_order' => $item['price'],
-                ]);
-            }
-
-            // وسيلة الدفع
-            Payment::create([
-                'order_id' => $order->id,
-                'payment_method' => PaymentMethod::Cash,
-                'amount' => $total,
-                'status' => 'pending',
-            ]);
-
-            // مسح السلة
-            if (Auth::check()) {
-                $user->cartItems()->delete();
-            } else {
-                session()->forget('cart');
-            }
-
-            session()->forget(['checkout.address', 'checkout.cart', 'checkout.total', 'checkout.order_id']);
-
-            DB::commit(); //لحفظ البيانات و إنهاء العملية
-
-            return view('website.orders.orderSuccess', compact('order', 'address'));
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => __('orders.checkout_failed')]);
         }
+
+        session()->forget(['checkout.address', 'checkout.cart', 'checkout.total', 'checkout.order_id']);
+
+        return view('website.orders.orderSuccess', [
+            'order' => $order,
+            'address' => $order->address,
+        ]);
     }
 
 
