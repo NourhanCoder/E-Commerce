@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Enums\PaymentMethod;
 use App\Exceptions\InsufficientStockException;
 use App\Services\OrderService;
+use App\Services\Payment\KashierSignatureValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class PaymentController extends Controller
@@ -24,7 +26,7 @@ class PaymentController extends Controller
         $amount = session('checkout.total');
         $currency = 'EGP';
         $mode = 'test';
-        $redirect_url = route('payment.callback', ['orderId' => $orderId]);
+        $redirect_url = route('payment.callback');
 
         $path = "/?payment=$merchantId.$orderId.$amount.$currency";
         $hash = hash_hmac('sha256', $path, $apiKey);
@@ -42,10 +44,18 @@ class PaymentController extends Controller
         ));
     }
 
-    public function paymentCallback(Request $request)
+    public function paymentCallback(Request $request, KashierSignatureValidator $kashier)
     {
-        if (!in_array($request->paymentStatus, ['SUCCESS', 'success'])) {
-            return redirect()->route('checkout.index')->withErrors(['error' => 'فشل في عملية الدفع.']);
+        // 1) The response must really come from Kashier
+        if (!$kashier->isVaild($request->query())) {
+            Log::warning('Invalid Kashier signature on payment callback', ['user_id' => Auth::id()]);
+
+            return redirect()->route('checkout.index')->withErrors(['error' => __('orders.payment_invalid')]);
+        }
+
+        // 2) The payment must have succeeded
+        if (strtoupper((string) $request->query('paymentStatus')) !== 'SUCCESS') {
+            return redirect()->route('checkout.index')->withErrors(['error' => __('orders.payment_failed')]);
         }
 
         $cart = session('checkout.cart');
@@ -54,7 +64,16 @@ class PaymentController extends Controller
         $orderUUID = session('checkout.order_id');
 
         if (!$cart || !$total || !$addressData || !$orderUUID) {
-            return redirect()->route('checkout.index')->withErrors(['error' => 'بيانات الدفع غير مكتملة.']);
+            return redirect()->route('checkout.index')->withErrors(['error' => __('orders.payment_incomplete')]);
+        }
+
+         // 3) The payment must belong to this checkout (same order id and same amount)
+         $paidAmount = (float) $request->query('amount');
+
+        if ($request->query('merchantOrderId') !== $orderUUID || abs($paidAmount - (float) $total) > 0.01) {
+            Log::warning('Kashier payment does not match the checkout', ['user_id' => Auth::id()]);
+
+            return redirect()->route('checkout.index')->withErrors(['error' => __('orders.payment_mismatch')]);
         }
 
 
@@ -68,7 +87,7 @@ class PaymentController extends Controller
                 [
                     'status' => $request->paymentStatus,
                     'paid_at' => now(),
-                    'transaction_id' => $request->transactionId,
+                    'transaction_id' => $request->query('transactionId'),
                 ],
             );
         } catch (InsufficientStockException $e) {
