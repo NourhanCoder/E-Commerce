@@ -59,21 +59,30 @@ class CheckoutController extends Controller
         })->toArray();
 
         if (empty($cart)) {
-            return redirect()->back()->withErrors(['cart' => 'السلة فارغة']);
+            return redirect()->back()->withErrors(['error' => __('orders.cart_empty')]);
         }
 
         $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
 
-        // تخزين في السيشن علشان نرجعلهم بعد الدفع
+        // Store data in session to retrieve after payment completion
         session()->put('checkout.cart', $cart);
         session()->put('checkout.total', $total);
 
-        //لو نقدي هيكمل الطلب
+        // Proceed with order for cash payment
         if (PaymentMethod::from($validated['payment_method']) === PaymentMethod::Cash) {
             return $this->handleCashCheckout($validated, $cart, $total);
         }
 
-        // لو بطاقه هيروح على صفحة كاشير
+        // Card: make sure everything is still in stock before sending the customer to the payment page
+        try {
+            $this->orders->assertInStock($cart);
+        } catch (InsufficientStockException $e) {
+            return redirect()->back()->withErrors([
+                'error' => __('orders.out_of_stock', ['title' => $e->product->title]),
+            ]);
+        }
+
+        // Redirect to Kashier for card payment
         return redirect()->route('payment.iframe');
     }
 
