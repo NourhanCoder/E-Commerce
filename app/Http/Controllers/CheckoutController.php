@@ -6,11 +6,10 @@ use App\Models\Order;
 use App\Services\OrderService;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Exceptions\InsufficientStockException;
+use App\Http\Requests\Checkout\CheckoutRequest;
 
 class CheckoutController extends Controller
 {
@@ -41,19 +40,13 @@ class CheckoutController extends Controller
         return view('website.orders.checkOut', compact('cart', 'total'));
     }
 
-    public function store(Request $request)
+    public function store(CheckoutRequest $request)
     {
-        $validated = $request->validate([
-            'city' => 'required|string|max:255',
-            'street' => 'required|string|max:500',
-            'phone' => 'required|string|max:20',
-            'note' => 'nullable|string|max:1000',
-            'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
-        ]);
+        $validated = $request->validated();
 
         $user = Auth::user();
 
-        //لحفظ عنوان الشحن مؤقتا في حالة الدفع بالكارت لمنع طلب البيانات من المستخدم مرة اخرى
+        // Cache shipping address for card checkout to avoid re-prompting user
         session()->put('checkout.address', $validated);
 
         $cart = $user->cartItems()->with('product')->get()->keyBy('product_id')->map(function ($item) {
