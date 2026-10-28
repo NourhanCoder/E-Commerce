@@ -16,6 +16,18 @@ use Illuminate\Support\Facades\DB;
 class OrderService
 {
     /**
+     * Early check, before the payment page. placeOrder checks again with a lock.
+     *
+     * @throws InsufficientStockException
+     */
+    public function assertInStock(array $cart): void
+    {
+        foreach ($cart as $productId => $item) {
+            $this->ensureEnoughStock(Product::findOrFail($productId), $item['quantity']);
+        }
+    }
+
+    /**
      * Create the order, its items and its payment, and update the stock.
      * Everything succeeds together or nothing is saved.
      *
@@ -48,13 +60,11 @@ class OrderService
                 'status' => OrderStatus::Pending,
             ]);
 
-            foreach($cart as $productId => $item){
+            foreach ($cart as $productId => $item) {
                 // Lock the product row until the transaction ends
                 $product = Product::lockForUpdate()->findOrFail($productId);
 
-                if($product->stock < $item['quantity']){
-                    throw new InsufficientStockException($product);
-                }
+                $this->ensureEnoughStock($product, $item['quantity']);
 
                 $product->decrement('stock', $item['quantity']);
 
@@ -80,5 +90,12 @@ class OrderService
 
             return $order;
         });
+    }
+
+    private function ensureEnoughStock(Product $product, int $quantity): void
+    {
+        if ($product->stock < $quantity) {
+            throw new InsufficientStockException($product);
+        }
     }
 }
