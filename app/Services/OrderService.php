@@ -92,6 +92,57 @@ class OrderService
         });
     }
 
+    /**
+     * Change the status of an order and keep the stock in line with it.
+     * Cancelling gives the quantities back; re-opening a cancelled order takes them again.
+     *
+     * @throws InsufficientStockException
+     */
+
+    public function changeStatus(Order $order, OrderStatus $newStatus): void
+    {
+        DB::transaction(function () use ($order, $newStatus) {
+            // Re-read the order with a lock so two changes can never overlap
+            $order = Order::lockForUpdate()->findOrFail($order->id);
+            $oldStatus = $order->status;
+
+            if ($this->holdsStock($oldStatus) && $newStatus === OrderStatus::Cancelled) {
+                $this->restoreStock($order);
+            }
+
+            if ($oldStatus === OrderStatus::Cancelled && $this->holdsStock($newStatus)) {
+                $this->takeStock($order);
+            }
+
+            $order->update(['status' => $newStatus]);
+        });
+    }
+
+    // Same rule the admin panel used before: these statuses are the ones that hold stock
+    private function holdsStock(OrderStatus $status): bool
+    {
+        return in_array($status, [OrderStatus::Pending, OrderStatus::Processing, OrderStatus::Shipped], true);
+    }
+
+    private function restoreStock(Order $order): void
+    {
+        foreach ($order->orderItems->sortBy('product_id') as $item) {
+            // The book may have been deleted since the order was placed
+            Product::lockForUpdate()->find($item->product_id)?->increment('stock', $item->quantity);
+        }
+    }
+
+    private function takeStock(Order $order): void
+    {
+        foreach ($order->orderItems->sortBy('product_id') as $item) {
+            $product = Product::lockForUpdate()->findOrFail($item->product_id);
+
+            $this->ensureEnoughStock($product, $item->quantity);
+
+            $product->decrement('stock', $item->quantity);
+        }
+    }
+
     private function ensureEnoughStock(Product $product, int $quantity): void
     {
         if ($product->stock < $quantity) {

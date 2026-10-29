@@ -6,7 +6,7 @@ use App\Models\Order;
 use App\Services\OrderService;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
 use App\Exceptions\InsufficientStockException;
 use App\Http\Requests\Checkout\CheckoutRequest;
@@ -119,33 +119,19 @@ class CheckoutController extends Controller
     }
 
 
-
     public function cancel(Order $order)
     {
-        if ($order->user_id !== Auth::id() || $order->status !== OrderStatus::Pending) {
-            abort(403, 'غير مسموح لك بإلغاء هذا الطلب.');
+        Gate::authorize('cancel', $order);
+
+        try{
+            $this->orders->changeStatus($order, OrderStatus::Cancelled);
+        } catch (\Throwable $e){
+            report($e);
+
+            return redirect()->back()->withErrors(['error' => __('orders.cancel_failed')]);
         }
-
-        DB::beginTransaction();
-
-        try {
-            // استرجاع الكمية لكل منتج في الطلب
-            foreach ($order->orderItems as $item) {
-                $product = $item->product;
-                if ($product) {
-                    $product->increment('stock', $item->quantity);
-                }
-            }
-
-            // تغيير حالة الطلب إلى ملغي
-            $order->update(['status' => OrderStatus::Cancelled]);
-
-            DB::commit();
-
-            return redirect()->route('orders.index')->with('success', 'تم إلغاء الطلب وإرجاع الكمية بنجاح.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'حدث خطأ أثناء إلغاء الطلب.']);
-        }
+        
+        return redirect()->route('orders.index')->with('success', __('orders.cancelled'));
+        
     }
 }
