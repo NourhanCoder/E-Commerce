@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Services\OrderService;
+use App\Services\CartService;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use Illuminate\Support\Facades\Gate;
@@ -13,30 +14,14 @@ use App\Http\Requests\Checkout\CheckoutRequest;
 
 class CheckoutController extends Controller
 {
-    public function __construct(private OrderService $orders)
+    public function __construct(private OrderService $orders, private CartService $cart)
     {
         //
     }
     public function index()
     {
-        $user = Auth::user();
+        ['cart' => $cart, 'total' => $total] = $this->cart->items();
 
-        $cartItems = $user->cartItems()->with('product')->get();
-
-        $cart = [];
-        $total = 0;
-
-        foreach ($cartItems as $item) {
-            $product = $item->product;
-            $price = $product->discounted_price ?? $product->price;
-            $cart[$product->id] = [
-                'title' => $product->title,
-                'price' => $price,
-                'image' => $product->image,
-                'quantity' => $item->quantity,
-            ];
-            $total += $price * $item->quantity;
-        }
         return view('website.orders.checkOut', compact('cart', 'total'));
     }
 
@@ -44,25 +29,13 @@ class CheckoutController extends Controller
     {
         $validated = $request->validated();
 
-        $user = Auth::user();
-
-        // Cache shipping address for card checkout to avoid re-prompting user
-        session()->put('checkout.address', $validated);
-
-        $cart = $user->cartItems()->with('product')->get()->keyBy('product_id')->map(function ($item) {
-            return [
-                'title' => $item->product->title,
-                'price' => $item->product->discounted_price ?? $item->product->price,
-                'image' => $item->product->image,
-                'quantity' => $item->quantity,
-            ];
-        })->toArray();
+        ['cart' => $cart, 'total' => $total] = $this->cart->items();
 
         if (empty($cart)) {
-            return redirect()->back()->withErrors(['error' => __('orders.cart_empty')]);
+            return redirect()->back()->withErrors(['cart' => __('orders.cart_empty')]);
         }
-
-        $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        // Cache shipping address for card checkout to avoid re-prompting user
+        session()->put('checkout.address', $validated);
 
         // Store data in session to retrieve after payment completion
         session()->put('checkout.cart', $cart);
@@ -84,6 +57,7 @@ class CheckoutController extends Controller
 
         // Redirect to Kashier for card payment
         return redirect()->route('payment.iframe');
+        
     }
 
 
