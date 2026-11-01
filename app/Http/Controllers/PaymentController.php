@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\PaymentMethod;
 use App\Exceptions\InsufficientStockException;
 use App\Services\OrderService;
-use App\Services\Payment\KashierSignatureValidator;
+use App\Services\Payment\KashierGateway;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -13,48 +13,37 @@ use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
-    public function __construct(private OrderService $orders)
+    public function __construct(private OrderService $orders, private KashierGateway $kashier)
     {
         //
     }
     public function getPaymentIframe()
     {
-        $merchantId = config('services.kashier.merchant_id');
-        $apiKey = config('services.kashier.api_key');
+        // Nothing to pay for: the customer did not come from the checkout form
+        if (!session()->has('checkout.total')) {
+            return redirect()->route('checkout.index');
+        }
 
-        $orderId = (string) Str::uuid();
-        $amount = session('checkout.total');
-        $currency = 'EGP';
-        $mode = 'test';
-        $redirect_url = route('payment.callback');
+        $merchantOrderId = (string) Str::uuid();
 
-        $path = "/?payment=$merchantId.$orderId.$amount.$currency";
-        $hash = hash_hmac('sha256', $path, $apiKey);
+        session()->put('checkout.order_id', $merchantOrderId);
 
-        session()->put('checkout.order_id', $orderId);
-
-        return view('payment.iframe', compact(
-            'merchantId',
-            'orderId',
-            'amount',
-            'currency',
-            'mode',
-            'hash',
-            'redirect_url'
-        ));
+        return view('payment.iframe', $this->kashier->paymentPageData($merchantOrderId, session('checkout.total')));
     }
 
-    public function paymentCallback(Request $request, KashierSignatureValidator $kashier)
+    public function paymentCallback(Request $request)
     {
+        $query = $request->query();
+
         // 1) The response must really come from Kashier
-        if (!$kashier->isVaild($request->query())) {
+        if (!$this->kashier->isGenuine($query)) {
             Log::warning('Invalid Kashier signature on payment callback', ['user_id' => Auth::id()]);
 
             return redirect()->route('checkout.index')->withErrors(['error' => __('orders.payment_invalid')]);
         }
 
         // 2) The payment must have succeeded
-        if (strtoupper((string) $request->query('paymentStatus')) !== 'SUCCESS') {
+        if (!$this->kashier->isSuccessful($query)) {
             return redirect()->route('checkout.index')->withErrors(['error' => __('orders.payment_failed')]);
         }
 
@@ -67,15 +56,12 @@ class PaymentController extends Controller
             return redirect()->route('checkout.index')->withErrors(['error' => __('orders.payment_incomplete')]);
         }
 
-         // 3) The payment must belong to this checkout (same order id and same amount)
-         $paidAmount = (float) $request->query('amount');
-
-        if ($request->query('merchantOrderId') !== $orderUUID || abs($paidAmount - (float) $total) > 0.01) {
+        // 3) The payment must belong to this checkout
+        if (!$this->kashier->matchesCheckout($query, $orderUUID, (float) $total)) {
             Log::warning('Kashier payment does not match the checkout', ['user_id' => Auth::id()]);
 
             return redirect()->route('checkout.index')->withErrors(['error' => __('orders.payment_mismatch')]);
         }
-
 
         try {
             $order = $this->orders->placeOrder(
@@ -85,7 +71,7 @@ class PaymentController extends Controller
                 $total,
                 PaymentMethod::Card,
                 [
-                    'status' => $request->paymentStatus,
+                    'status' => $request->query('paymentStatus'),
                     'paid_at' => now(),
                     'transaction_id' => $request->query('transactionId'),
                 ],
