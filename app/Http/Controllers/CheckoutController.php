@@ -7,6 +7,7 @@ use App\Services\OrderService;
 use App\Services\CartService;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
 use App\Exceptions\InsufficientStockException;
@@ -71,7 +72,7 @@ class CheckoutController extends Controller
                 $cart,
                 $total,
                 PaymentMethod::Cash,
-                ['status' => 'pending'], //spread operator data
+                ['status' => PaymentStatus::Pending], //spread operator data
             );
 
         } catch (InsufficientStockException $e) {

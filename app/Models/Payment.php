@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -10,13 +11,21 @@ class Payment extends Model
 {
      use HasFactory;
 
-    protected $fillable = 
-    ['order_id', 'payment_method', 'transaction_id', 'amount', 'currency', 'status', 'paid_at'];
+    protected $fillable = [
+      'order_id', 
+      'payment_method', 
+      'transaction_id', 
+      'amount', 
+      'currency', 
+      'status', 
+      'paid_at'
+    ];
 
     protected function casts(): array
     {
       return [
         'payment_method' => PaymentMethod::class,
+        'status' => PaymentStatus::class,
       ];
 
     }
