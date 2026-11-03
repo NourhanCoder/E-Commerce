@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use App\Exceptions\InsufficientStockException;
 use App\Services\OrderService;
 use App\Services\Payment\KashierGateway;
@@ -71,7 +72,7 @@ class PaymentController extends Controller
                 $total,
                 PaymentMethod::Card,
                 [
-                    'status' => $request->query('paymentStatus'),
+                    'status' => PaymentStatus::Paid,
                     'paid_at' => now(),
                     'transaction_id' => $request->query('transactionId'),
                 ],
