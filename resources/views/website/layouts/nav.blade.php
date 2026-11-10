@@ -26,10 +26,10 @@
                 </a>
                 
                     <ul class="nav__user-list position-absolute p-0 list-unstyled bg-white">
-                        <li class="nav__link nav__user-link"><a href="profile.html">لوحة التحكم</a></li>
+                        {{-- <li class="nav__link nav__user-link"><a href="profile.html">لوحة التحكم</a></li> --}}
                         <li class="nav__link nav__user-link"><a href="{{ route('orders.index') }}">الطلبات</a></li>
-                        <li class="nav__link nav__user-link"><a href="account_details.html">تفاصيل الحساب</a></li>
-                        <li class="nav__link nav__user-link"><a href="favourites.html">المفضلة</a></li>
+                        {{-- <li class="nav__link nav__user-link"><a href="account_details.html">تفاصيل الحساب</a></li> --}}
+                        <li class="nav__link nav__user-link"><a href="{{ route('favourites.page') }}">المفضلة</a></li>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button class="nav__link nav__user-link" type="submit">تسجيل الخروج</button>
@@ -90,14 +90,14 @@
 
     
             <li class="nav-mobile__link d-flex align-items-center flex-column gap-1">
-                <a class="d-flex align-items-center flex-column gap-1 text-decoration-none" href="profile.html">
+                <a class="d-flex align-items-center flex-column gap-1 text-decoration-none" href="{{ route('orders.index') }}">
                     <i class="fa-regular fa-user"></i>
                     حسابي
                 </a>
             </li>
 
             <li class="nav-mobile__link d-flex align-items-center flex-column gap-1">
-                <a class="d-flex align-items-center flex-column gap-1 text-decoration-none" href="favourites.html">
+                <a class="d-flex align-items-center flex-column gap-1 text-decoration-none" href="{{ route('favourites.page') }}">
                     <i class="fa-regular fa-heart"></i>
                     المفضلة
                 </a>
