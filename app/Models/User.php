@@ -12,8 +12,7 @@ use App\Enums\UserType;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
-     use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -53,22 +52,22 @@ class User extends Authenticatable
         ];
     }
 
-      public function addresses()
+    public function addresses()
     {
         return $this->hasMany(Address::class);
     }
 
     public function cartItems()
-   {
-     return $this->hasMany(CartItem::class);
-   }
+    {
+        return $this->hasMany(CartItem::class);
+    }
 
     public function orders()
     {
         return $this->hasMany(Order::class);
     }
 
-      public function favourites()
+    public function favourites()
     {
         return $this->hasMany(Favourite::class);
     }
@@ -76,19 +75,18 @@ class User extends Authenticatable
     //لعرض كل المنتجات اللي ضافها المستخدم للمفضلة
     public function favouriteProducts()
     {
-      return $this->belongsToMany(Product::class, 'favourites');
+        return $this->belongsToMany(Product::class, 'favourites');
     }
 
 
-     public function reviews()
+    public function reviews()
     {
         return $this->hasMany(Review::class);
     }
 
     //to avoid writing image path in blade files
     public function image()
-{
-    return $this->image ? asset('public/users/' . $this->image) : null;
-}
-
+    {
+        return $this->image ? asset('public/users/' . $this->image) : null;
+    }
 }
