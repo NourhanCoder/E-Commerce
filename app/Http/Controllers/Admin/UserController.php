@@ -51,9 +51,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'type' => 'required|in:admin,customer', 
             'password' => 'required|string|min:8|confirmed',
-            'image' => 'nullable',
-            'image',
-            'mimes:png,jpg,jpeg,gif,webp'
+            'image' => 'nullable|image|mimes:png,jpg,jpeg,gif,webp',
         ]);
 
         $imageName = null;
