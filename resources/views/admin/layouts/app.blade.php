@@ -10,7 +10,7 @@
     <title>@yield('title')</title>
 
     <!-- Bootstrap -->
-    <link href="cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+    {{-- <link href="cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css"> --}}
     <link href="{{asset('admin/vendors/bootstrap/dist/css/bootstrap.min.css')}}" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="{{asset('admin/vendors/font-awesome/css/font-awesome.min.css')}}" rel="stylesheet">
@@ -36,7 +36,7 @@
          @include('admin.layouts.nav')
         <!-- /top navigation -->
         
-
+          <x-admin-flash-messages />
         <!-- page content -->
         @yield('admin-content')
         <!-- /page content -->

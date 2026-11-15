@@ -87,47 +87,20 @@ Route::middleware('auth')->prefix('payment')->name('payment.')->group(function (
 //Admin Routes
 Route::middleware(['auth', 'can:admin-control'])->prefix('admin')->name('admin.')->group(function () {
     
-    // Dashboard page – بتعرض كل المستخدمين
+    // Dashboard: all users and the low-stock alert
     Route::get('/panel', [UserController::class, 'index'])->name('panel');
 
-    // تفعيل / تعطيل مستخدم
+    // Users
     Route::post('/users/{user}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
+    Route::resource('users', UserController::class)->except('index');
 
-    //انشاء مستخدم
-    Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
-
-    //إضافة مستخدم
-    Route::post('/users/store', [UserController::class, 'store'])->name('users.store');
-
-    //عرض المستخدم
-    Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
-
-    // تعديل مستخدم
-    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
-
-    // تحديث بيانات مستخدم
-    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
-
-    // حذف مستخدم
-    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
-});
-
-Route::prefix('admin')->middleware(['auth', 'can:admin-control'])->name('admin.')->group(function () {
     Route::resource('categories', CategoryController::class);
-});
-
-Route::prefix('admin')->middleware(['auth', 'can:admin-control'])->name('admin.')->group(function () {
     Route::resource('products', ProductController::class);
-});
-
-Route::prefix('admin')->middleware(['auth', 'can:admin-control'])->name('admin.')->group(function () {
     Route::resource('discounts', DiscountController::class);
-});
 
-//Manage Orders
-Route::middleware(['auth', 'can:admin-control'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+    // Orders
+    Route::resource('orders', AdminOrderController::class)->only(['index', 'show']);
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
 });
+
 require __DIR__.'/auth.php';

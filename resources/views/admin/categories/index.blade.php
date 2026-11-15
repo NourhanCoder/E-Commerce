@@ -10,12 +10,7 @@
                 <div class="clearfix"></div>
             </div>
 
-            <div class="x_content">
-                @if (session('success'))
-                    <div class="alert alert-success">
-                        {{ session('success') }}
-                    </div>
-                @endif
+            
 
                 <table class="table table-striped table-bordered text-center">
                     <thead class="table-dark">

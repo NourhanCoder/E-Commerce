@@ -40,11 +40,6 @@
 
     <h2>Users List</h2> 
 
-    @if (session('success'))
-  <div class="alert alert-success mt-3">
-    {{ session('success') }}
-  </div>
-@endif
     <table class="table table-bordered table-striped text-center">
       <thead class="table-dark">
         <tr>
